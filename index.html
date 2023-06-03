@@ -5,25 +5,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <script>
+         //airtable family search script ownded by gove.allen@
+       const endpoint = "https://script.google.com/macros/s/AKfycbzeVQjLkXqSxUE6M-55XViE1dQMD33keOvYHsD02S5aI7FaGlB3KPwWI4BwOiKKvOMBnQ/exec" 
+       let person=""
        async function start_me_up(){
         get_person()
        }
-       async function get_person(){
-            const response  = await fetch("https://script.google.com/macros/s/AKfycbyxC9BPrve_VigSWccENfzxSb1vMu649aHW9A_VsEofR1CR1buFioHyn4DG30wl5r7xwQ/exec")
+
+        async function record_pid(){
+            if(!tag("pid").value){
+                alert("PID required")
+                return
+            }
+
+            const response  = await fetch(endpoint + `?mode=addrecord&person=${person}&pid=${tag("pid").value}`)
+            const text = await response.text();
+            console.log(text)
+            const rec = JSON.parse(text)
+            console.log(rec);
+            if(rec.records[0].fields.pid===tag("pid").value){
+                get_person()
+            }else{
+                alert("PID not recorded.  This is unexpected. Contact Administrator")
+            }
+
+        }
+
+        async function get_person(){
+           
+            const response  = await fetch(endpoint+"?mode=getrecord")
 
             const text = await response.text();
             console.log(text)
             const rec = JSON.parse(text)
             console.log(rec);
-            let url=rec.fields.report_link
-            url=url.split(".com/").join(".com/embed/")+"&hide_person=true"
-            tag("report_link").src=url
+            person = rec.id
+            // let url=rec.fields.report_link
+            // url=url.split(".com/").join(".com/embed/")+"&hide_person=true"
+            // tag("report_link").src=url
 //            tag("link").src= rec.fields.report_link
             tag("full_name").innerHTML = rec.fields.full_name || ""
             tag("birth").innerHTML = rec.fields.birth || ""
             tag("birthplace").innerHTML = rec.fields.birthplace || ""
             tag("death").innerHTML = rec.fields.death || ""
             tag("deathplace").innerHTML = rec.fields.deathplace || ""
+            tag("pid").value = ""
+
+            tag("pid").focus()
 
             if(rec.fields.url){
                 newwindow=window.open(rec.fields.url,"wikipedia");
@@ -51,14 +79,11 @@
         <tr><td>Birthplace</td><td id="birthplace"></td></tr>
         <tr><td>Died</td><td id="death"></td></tr>
         <tr><td>Death place</td><td id="deathplace"></td></tr>
+        <tr><td>PID</td><td><input id="pid" type="text" size=5></td></tr>
         <tr><td colspan="2">
-            <button onclick="get_person()">Next Person</button>
+            <button onclick="record_pid()">Record PID</button>
         </td></tr></table>    
     </div>
-
-        <iframe id="report_link" class="airtable-embed" frameborder="0" onmousewheel="" width="250" height="430" style="background: transparent; border: 1px solid #ccc;"></iframe>
-
-    
 
 </body>
 </html>
