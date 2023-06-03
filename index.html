@@ -24,6 +24,7 @@
             const rec = JSON.parse(text)
             console.log(rec);
             if(rec.records[0].fields.pid===tag("pid").value){
+                tag("processed").innerHTML = parseInt(tag("processed").innerHTML) + 1
                 get_person()
             }else{
                 alert("PID not recorded.  This is unexpected. Contact Administrator")
@@ -62,6 +63,7 @@
             if (window.focus) {newwindow.focus()}     
 
             window.focus()
+
         }
         
         function tag(id){
@@ -83,9 +85,10 @@
         <tr><td colspan="2">
             <button onclick="record_pid()">Record PID</button>
         </td></tr></table>    
-
-        <span style="cursor:pointer" onclick="tag('pid').value='skip'">Enter "skip" if you are unable to find the record that you are sure it the right person.</span>
-    </div>
+        <div style="cursor:pointer; padding:1rem" onclick="tag('pid').value='skip'">Enter "skip" if you are unable to find the record that you are sure it the right person.</div>
+        <div>Records Processed this Session: <span id="processed">0</span></div>
+        <h3>Remaining Records:</h3>
+<iframe class="airtable-embed" src="https://airtable.com/embed/shrcheXMaIMNlqgQL?backgroundColor=greenDusty&viewControls=on" frameborder="0" onmousewheel="" width="100%" height="200" style="background: transparent; border: 1px solid #ccc;"></iframe>    </div>
 
 </body>
 </html>
