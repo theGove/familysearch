@@ -6,7 +6,7 @@
     <title>Document</title>
     <script>
          //airtable family search script ownded by gove.allen@
-       const endpoint = "https://script.google.com/macros/s/AKfycbzeVQjLkXqSxUE6M-55XViE1dQMD33keOvYHsD02S5aI7FaGlB3KPwWI4BwOiKKvOMBnQ/exec" 
+       const endpoint = "https://script.google.com/macros/s/AKfycbx2zrew0mcuc1hh6t20g9KWbxN08XY-VKX0s28TPPc5UU-hsrL5reN4J6h7XSR3XLFEjg/exec" 
        let person=""
        async function start_me_up(){
         get_person()
@@ -34,8 +34,11 @@
 
         async function get_person(){
            
-            const response  = await fetch(endpoint+"?mode=getrecord")
+            const status = new URLSearchParams(window.location.search).get('status') 
+            let suffix="?mode=getrecord"
+            if(status){suffix += "&suffix=" + status}
 
+            const response  = await fetch(endpoint+suffix)
             const text = await response.text();
             console.log(text)
             const rec = JSON.parse(text)
