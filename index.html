@@ -3,95 +3,24 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <script>
-         //airtable family search script ownded by gove.allen@
-       const endpoint = "https://script.google.com/macros/s/AKfycbx2zrew0mcuc1hh6t20g9KWbxN08XY-VKX0s28TPPc5UU-hsrL5reN4J6h7XSR3XLFEjg/exec" 
-       let person=""
-       async function start_me_up(){
-        get_person()
-       }
-
-        async function record_pid(){
-            if(!tag("pid").value){
-                alert("PID required")
-                return
-            }
-
-            const response  = await fetch(endpoint + `?mode=addrecord&person=${person}&pid=${tag("pid").value}`)
-            const text = await response.text();
-            console.log(text)
-            const rec = JSON.parse(text)
-            console.log(rec);
-            if(rec.records[0].fields.pid===tag("pid").value){
-                tag("processed").innerHTML = parseInt(tag("processed").innerHTML) + 1
-                get_person()
-            }else{
-                alert("PID not recorded.  This is unexpected. Contact Administrator")
-            }
-
-        }
-
-        async function get_person(){
-           
-            const status = new URLSearchParams(window.location.search).get('status') 
-            let suffix="?mode=getrecord"
-            if(status){suffix += "&suffix=" + status}
-
-            const response  = await fetch(endpoint+suffix)
-            const text = await response.text();
-            console.log(text)
-            const rec = JSON.parse(text)
-            console.log(rec);
-            person = rec.id
-            // let url=rec.fields.report_link
-            // url=url.split(".com/").join(".com/embed/")+"&hide_person=true"
-            // tag("report_link").src=url
-//            tag("link").src= rec.fields.report_link
-            tag("full_name").innerHTML = rec.fields.full_name || ""
-            tag("birth").innerHTML = rec.fields.birth || ""
-            tag("birthplace").innerHTML = rec.fields.birthplace || ""
-            tag("death").innerHTML = rec.fields.death || ""
-            tag("deathplace").innerHTML = rec.fields.deathplace || ""
-            tag("pid").value = ""
-
-            tag("pid").focus()
-
-            if(rec.fields.url){
-                newwindow=window.open(rec.fields.url,"wikipedia");
-                if (window.focus) {newwindow.focus()}     
-            }
-
-            newwindow=window.open(rec.fields.link,"family-search");
-            if (window.focus) {newwindow.focus()}     
-
-            window.focus()
-
-        }
-        
-        function tag(id){
-            return document.getElementById(id)
-        }
-       
-
-    </script>
+    <script type="text/javascript" src="code.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/vanjs-org/mini-van/public/mini-van-0.6.0.nomodule.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <title>Assing PID</title>
 </head>
 <body onload="start_me_up()">
-<table><tr><td>
-    <div id="full_name" style="font-size:2rem"></div>
-    <div><table>
-        <tr><td>Born</td><td id="birth"></td></tr>
-        <tr><td>Birthplace</td><td id="birthplace"></td></tr>
-        <tr><td>Died</td><td id="death"></td></tr>
-        <tr><td>Death place</td><td id="deathplace"></td></tr>
-        <tr><td>PID</td><td><input id="pid" type="text" size=10></td></tr>
-        <tr><td colspan="2">
-            <button onclick="record_pid()">Record PID</button>
-        </td></tr></table>    
-        <div style="cursor:pointer; padding:1rem" onclick="tag('pid').value='skip'">Enter "skip" if you are unable to find the record that you are sure it the right person.</div>
-        <div>Records Processed this Session: <span id="processed">0</span></div>
-        <h3>Remaining Records:</h3>
-<iframe class="airtable-embed" src="https://airtable.com/embed/shrcheXMaIMNlqgQL?backgroundColor=greenDusty&viewControls=on" frameborder="0" onmousewheel="" width="100%" height="200" style="background: transparent; border: 1px solid #ccc;"></iframe>    </div>
+    <div id="list">
+        <table id="person-table">
+            <tr style>
+                <th>Name</th>
+                <th>Open</th>
+                <th>Difficulty</th>
+                <th>Group</th>
+            </tr>
+        </table>
+    </div>
+    <div id="person" style="display:none"></div>
+
 
 </body>
 </html>

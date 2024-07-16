@@ -1,0 +1,17 @@
+th{
+    color:white;
+    background-color: darkslateblue;
+    font-weight: bold;
+    position: sticky;
+    top: 0;
+}
+
+input{
+    width:6rem;
+}  
+
+.data-row-odd{
+    background-color: lightblue;
+}.data-row-even{
+    background-color: #eee;
+}
