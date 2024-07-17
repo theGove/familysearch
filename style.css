@@ -11,7 +11,7 @@ input{
 }  
 
 .data-row-odd{
-    background-color: lightblue;
+    background-color: #cdd;
 }.data-row-even{
-    background-color: #eee;
+    background-color: #dee;
 }

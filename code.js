@@ -81,17 +81,24 @@
             let data_row="data-row-even"
 
             for(const record of records ){
-                const wiki_button=button(
-                    "Web Article"
-                )
-                wiki_button.dataset.url=record.fields["url"]
-                wiki_button.addEventListener("click", (evt) => {open_page(evt)});
+                // const wiki_button=button(
+                //     "Web Article"
+                // )
+                // wiki_button.dataset.url=record.fields["url"]
+                // wiki_button.addEventListener("click", (evt) => {open_page(evt)});
                 
-                const familysearch_button=button(
-                    "Family Search"
+                // const familysearch_button=button(
+                //     "Family Search"
+                // )
+                // familysearch_button.dataset.url=record.fields["link"]
+                // familysearch_button.addEventListener("click", (evt) => {family_search(evt)});
+                
+                const resource_button=button(
+                    "Open Pages"
                 )
-                familysearch_button.dataset.url=record.fields["link"]
-                familysearch_button.addEventListener("click", (evt) => {family_search(evt)});
+                resource_button.dataset.url=record.fields["url"]
+                resource_button.dataset.link=record.fields["link"]
+                resource_button.addEventListener("click", (evt) => {open_resources(evt)});
                 
                 const update_pid_button=button(
                     {class:"pid-button"},
@@ -107,7 +114,7 @@
 
                 const table_row= tr({class:data_row},
                     td(record.fields["full_name"]),
-                    td(wiki_button,familysearch_button),
+                   // td(wiki_button,familysearch_button),
                     td(record.fields["difficulty"]),
                     td(record.fields["group_names"]),
                 )
@@ -118,8 +125,12 @@
                 
                 tag("person-table").appendChild(
                     tr({class:"drawer",style:"display:none"},
-                        td({colspan:4,style:"background-color:lemonChiffon"},
+                        td({colspan:3,style:"background-color:lemonChiffon"},
                             table({style:"margin-left:2rem"},
+                                tr(
+                                    td("Search Resources"),
+                                    td(resource_button),
+                                ),
                                 tr(
                                     td("Birth"),
                                     td(record.fields["birth"]),
@@ -175,6 +186,11 @@
         if (window.focus) {newwindow.focus()}   
     }
 
+    function open_resources(evt){
+        let newwindow=window.open(evt.target.dataset.url,"wikipedia");
+        newwindow=window.open(evt.target.dataset.link,"familySearch");
+        if (window.focus) {newwindow.focus()}   
+    }
 
 
 

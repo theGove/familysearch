@@ -1,0 +1,204 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script>//google apps script is airtable family search owned b gove.allen
+       const endpoint = "https://script.google.com/macros/s/AKfycbz5-vNNrvzVQwb5cAv40swK4PBq4JlO6A-iCyLy9sCideEZYI1gX4yvXscnjnAde5Rj5A/exec" 
+        async function add_images(set){
+            //console.log("set", set)
+            let counter = 1
+            for(const key of Object.keys(set.people)){
+                tag("counter").innerHTML = counter++
+                //console.log(counter)
+                const person = set.people[key]
+                //console.log(person)
+                if(!person.gender){
+                    try{
+                        let rsp=await fetch(`https://api.familysearch.org/platform/tree/persons/${person.pid}/portrait?default=https://foundersearch.colonialheritage.org/images/male.svg&access_token=` + localStorage.getItem("authenticatedToken"))
+                        tag("output").append(rsp.url + "\n")
+                        if(!rsp.url.includes(localStorage.getItem("authenticatedToken")) &&
+                        !rsp.url.includes("foundersearch.colonialheritage.org")
+                        ){
+                            set.people[key].imageURL=rsp.url
+                        }
+                    }catch(e){
+                        //console.log("error fetching", e)
+                    }
+                        
+                    rsp=await fetch(`https://api.familysearch.org/platform/tree/persons/${person.pid}`,{headers:{authorization:"Bearer " + localStorage.getItem("authenticatedToken")}})
+                    if(rsp.status===401){
+                        return false
+                    }
+                    let text = await rsp.text()
+                    if(text.includes("<gender>Female</gender>")){
+                        set.people[key].gender="Female"
+                    }else{
+                        set.people[key].gender="Male"
+                    }
+
+                    console.log("person",set.people[key])
+                    const rec={id: set.people[key].id,
+                            fields: {
+                            }
+                        }
+                    if(set.people[key].imageURL){
+                        rec.fields.image_url=set.people[key].imageURL
+                    }        
+                    if(set.people[key].gender){
+                        rec.fields.gender=set.people[key].gender
+                    }        
+
+                    console.log("record",JSON.stringify(rec,null,2))
+                    const url= endpoint+"?mode=update&data=" + encodeURIComponent(btoa(JSON.stringify(rec)))
+                    //console.log(url)
+                    const response  = await fetch(url)
+                    const result = await response.text();
+                    console.log("result",result)
+                    
+                }
+            }
+            return set
+            //document.body.innerHTML = "<pre>" + JSON.stringify(set,null,2) + "</pre>"
+        }
+
+
+        function download_text_file(text, filename) {
+            var blob = new Blob([text], { type: "text/plain" });
+            var url = window.URL.createObjectURL(blob);
+            var a = document.createElement("a");
+            a.href = url;
+            a.download = filename;
+            a.click();
+        }
+        function show_links(){
+            const groups = JSON.parse(sessionStorage.getItem("group"))
+            //console.log(groups)
+            const html=["<h2>Build data set</h2>"]
+            for(const group of Object.values(groups)){
+                if(group.fields.shortname){
+                    //console.log(group.fields.shortname)
+                    html.push(`<a href="build-set-json.html?set=${group.fields.shortname}&load=false">${group.fields.shortname}</a><br>`)
+                }
+            }
+            document.body.innerHTML=html.join("")
+        }
+        async function start_me_up(){
+            let set_name = new URLSearchParams(window.location.search).get('set');
+            let load = new URLSearchParams(window.location.search).get('load');
+            
+            if(!sessionStorage.getItem("group") || load==="true"){
+                await get_data()
+            }
+
+            const person = JSON.parse(sessionStorage.getItem("person"))
+            const pid = JSON.parse(sessionStorage.getItem("pid"))
+            const group = JSON.parse(sessionStorage.getItem("group"))
+
+            
+            for(const [id, grp] of Object.entries(group)){
+              //console.log(grp.fields.shortname,set_name)  
+              if(grp.fields.shortname===set_name){   
+                let image_url=grp.fields.image_url
+                if(!image_url){
+                    image_url=set_name + ".png"
+                }
+                
+                const report={
+                    title: grp.fields.group_name,
+                    desc: grp.fields.description,
+                    banner: image_url,
+                    backgroundColor: "#fff",
+                    textColor: "#000",
+                    people:[]
+                }
+                const data = grp.fields
+                //console.log(data.group_name, grp.id, data.members.length)
+                for(const member of data.members){
+                    //console.log("member",member)
+                    if(person[member].fields.pid && pid[person[member].fields.pid[0]].fields.pid && pid[person[member].fields.pid[0]].fields.pid.includes("-")){
+
+                        //console.log("member", pid[person[member].fields.pid[0]].fields.pid)
+
+                        report.people.push({
+                            id:person[member].id,
+                            pid: pid[person[member].fields.pid[0]].fields.pid,
+                            name: person[member].fields.full_name,
+                            desc: person[member].fields.blurb,
+                            url: person[member].fields.url,
+                            level:person[member].fields.level,
+                            gender:person[member].fields.gender,
+                            imageURL:person[member].fields.image_url,
+                        })
+                        //console.log(person[member].fields.full_name, pid[person[member].fields.pid].fields.pid, person[member].fields.blurb)
+                    }
+
+                }
+                const report_with_images = await add_images(report)
+                if(report_with_images){
+                    //document.body.innerHTML="<pre>"+JSON.stringify(report_with_images, null, 2)+"</pre>"
+                    download_text_file(JSON.stringify(report_with_images, null, 2),set_name+".json")
+                }else{
+                    tag("output").innerHTML=`You need to get authenticated in this tab using <a href="/relatives.html">relatives.html</a>.  Then try again.`
+                    return
+                }
+               
+              }
+            }
+            //document.body.innerHTML = "<pre>" + JSON.stringify(data,null,2) + "</pre>" 
+            show_links()
+        }
+
+        async function get_data(){
+            const data={
+                person:null,
+                group:null,
+                pid:null
+            }
+            for(const key of Object.keys(data)){
+                const result = await get_table(key)
+                //console.log("key",key)
+                //console.log("data",result)
+                tag(key).innerHTML = Object.keys(result).length
+            }
+
+        }
+
+        async function get_table(tablename){
+            const url= endpoint+"?mode=table&name=" + tablename
+            console.log("table",url)
+            const response  = await fetch(url)
+            const text = await response.text();
+            const table = {}
+            const data = JSON.parse(text)
+
+            for(record of data){
+                table[record.id] = record
+            }
+
+            sessionStorage.setItem(tablename,JSON.stringify(table))
+            return table
+        }
+
+
+        function tag(id){
+            return document.getElementById(id)
+        }
+
+    </script>
+</head>
+<body onload="start_me_up()">
+    Getting data from airtable
+    <table><tr><td>
+        People:
+        </td><td id="person"></td></tr><td>
+        PIDs:
+        </td><td id="pid"></td></tr><td>
+        Groups:
+        </td><td id="group"></td></tr>
+    </table>
+    <div id="counter"></div>
+    <div id="output"></div>
+</body>
+</html>
