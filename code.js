@@ -1,11 +1,11 @@
          //airtable family search script ownded by gove.allen@
-         const endpoint = "https://script.google.com/macros/s/AKfycbyk2J48Z6c2QBhYRJ1MepQGxIoB74JyoN1U_DGurT10yJqLkg36G2lUXBr6fMc8LNv1bQ/exec"
+         const endpoint = "https://script.google.com/macros/s/AKfycbyXbIv4HQocfFa3QfedpK3PdoCLnElof--9Ngk8so-N1TZBl7wnmH8_34NiTKVuGkwxgg/exec"
          let person=""
          async function start_me_up(){
           getListOfPeople()
          }
   
-          async function record_pid(evt){
+         async function record_pid(evt){
 
 
 
@@ -14,7 +14,7 @@
                 table=table.parentNode
             }
 
-            const input_tag=table.querySelector("input")
+            const input_tag=table.querySelector(".pid-field")
             input_tag.style.backgroundColor="grey"
 
               if(!input_tag.value){
@@ -27,9 +27,38 @@
               const text = await response.text();
               console.log(text)
               const rec = JSON.parse(text)
-              console.log(rec);
+              console.log(rec.records[0]);
               if(rec.records[0].fields.pid===input_tag.value){
-                  input_tag.style.backgroundColor="white"
+                  input_tag.style.backgroundColor="lightgreen"
+                }else{
+                  alert("Difficulty not recorded.  This is unexpected. Contact Administrator")
+                  input_tag.style.backgroundColor="red"
+                }
+  
+          }          
+          async function update_difficulty(evt){
+
+            let table=evt.target
+            while(table.tagName.toUpperCase()!=="TABLE"){
+                table=table.parentNode
+            }
+
+            const input_tag=table.querySelector(".difficulty-field")
+            input_tag.style.backgroundColor="grey"
+            console.log("input_tag",input_tag)
+              if(!input_tag.value){
+                  alert("Difficulty required")
+                  return
+              }
+              
+  
+              const response  = await fetch(endpoint + `?mode=updatedifficulty&person=${input_tag.dataset.record_id}&difficulty=${input_tag.value}`)
+              const text = await response.text();
+              console.log("text",text)
+              const rec = JSON.parse(text)
+              console.log("rec",rec.records[0]);
+              if(rec.records){
+                  input_tag.style.backgroundColor="lightgreen"
                 }else{
                   alert("PID not recorded.  This is unexpected. Contact Administrator")
                   input_tag.style.backgroundColor="red"
@@ -65,9 +94,16 @@
                 familysearch_button.addEventListener("click", (evt) => {family_search(evt)});
                 
                 const update_pid_button=button(
-                    "Update PID"
+                    {class:"pid-button"},
+                    "Update"
                 )
                 update_pid_button.addEventListener("click", (evt) => {record_pid(evt)});
+
+                const update_difficulty_button=button(
+                    {class:"difficulty-button"},
+                    "Update"
+                )
+                update_difficulty_button.addEventListener("click", (evt) => {update_difficulty(evt)});
 
                 const table_row= tr({class:data_row},
                     td(record.fields["full_name"]),
@@ -102,10 +138,15 @@
                                 ),
                                 tr(
                                     td("PID"),
-                                    td(input({id:record.id, "data-record_id":record.id})),
+                                    td(input({id:record.id, class:"pid-field", "data-record_id":record.id}),
+                                    update_pid_button
+                                    ),
                                 ),
                                 tr(
-                                    td({colspan:2}, update_pid_button),
+                                    td("Difficulty"),
+                                    td(input({id:"d-"+record.id, class:"difficulty-field", "data-record_id":record.id, value:record.fields["difficulty"]}),
+                                    update_difficulty_button
+                                    ),
                                 )
                             )
                         )
